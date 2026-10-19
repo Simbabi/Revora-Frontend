@@ -1,0 +1,30 @@
+﻿name: Validate wallet issue 923
+on:
+  push:
+    branches: [validation/923-c84d]
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: ['80bbc636a578038fd58f715427dd8a9e8c92693e', 'c00dd8430ec77f45d36faa59f314dacda54d81ed']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.revision }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm test -- --maxWorkers=4 --reporter=json --outputFile=full-tests.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tests-${{ matrix.revision }}
+          path: full-tests.json
